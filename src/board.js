@@ -79,35 +79,39 @@ export default class Board {
         newRow.push(0);
       }
 
+      if (JSON.stringify(values) !== JSON.stringify(newRow)) {
+        moved = true;
+      }
+
       return newRow;
     };
 
-    const processDirection = (isHorizontal) => {
+    const processDirection = (isColumn) => {
       for (let i = 0; i < this.size; i++) {
-        const line = isHorizontal
-          ? this.board[i]
-          : [
+        const line = isColumn
+          ? [
               this.board[0][i],
               this.board[1][i],
               this.board[2][i],
               this.board[3][i],
-            ];
-
-        const newLine = moveRowOrColumn(line);
-        if (isHorizontal) {
-          this.board[i] = newLine;
-        } else {
+            ]
+          : this.board[i];
+        const newLine = moveRowOrColumn(line, !isColumn);
+        if (isColumn) {
           for (let j = 0; j < this.size; j++) {
             this.board[j][i] = newLine[j];
+            this.updateTiles();
           }
+        } else {
+          this.board[i] = newLine;
         }
       }
     };
 
     if (direction === 'left' || direction === 'right') {
-      processDirection(true);
-    } else {
       processDirection(false);
+    } else {
+      processDirection(true);
     }
 
     this.updateTiles();
