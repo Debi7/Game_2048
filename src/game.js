@@ -1,8 +1,6 @@
 import GameCanvas from './gameCanvas.js';
 import Board from './board.js';
 
-// let count = 0;
-
 export default class Game {
   constructor(canvasElement) {
     this.canvas = new GameCanvas(canvasElement);

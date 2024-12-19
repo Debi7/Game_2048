@@ -1,7 +1,12 @@
+// отвечает за отображение игрового поля на холсте HTML
+// Ключевые методы:
+// drawTile(tile): рисует на холсте отдельную плитку на основе ее значения и положения
+// Clear(): очищает холст для перерисовки
+// drawBoard(board): циклически перебирает массив досок и рисует каждую плитку, если она имеет ненулевое значение
+
 import Board from './board.js';
 
 const canvasElement = document.getElementById('canvas');
-
 export default class GameCanvas {
   constructor(canvas) {
     this.canvas = canvas;
@@ -98,6 +103,7 @@ export default class GameCanvas {
     console.log(`Move: ${direction}`);
     this.board.move(direction);
     this.drawBoard(this.board.tiles);
+    this.updateScore(this.board.getScore());
   }
 
   drawTile(tile) {
@@ -172,6 +178,14 @@ export default class GameCanvas {
         this.drawTile(tile);
       }
     });
+  }
+
+  updateScore(score) {
+    console.log(score);
+    const scoreElement = document.getElementById('score');
+    if (scoreElement) {
+      scoreElement.textContent = score;
+    }
   }
 }
 

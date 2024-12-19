@@ -1,3 +1,18 @@
+// управляет состоянием игры, включая позиции плиток и добавление новых плиток
+// Ключевые методы:
+// InitializeBoard(): Инициализирует доску двумя начальными плитками
+// addTile(): добавляет новую плитку (2 или 4) в случайную пустую ячейку на доске
+// getEmptyCells(): возвращает список пустых ячеек, в которые можно добавить новые плитки
+// draw(ctx): очищает холст и рисует все плитки
+// - методы движения плиток (вверх/вниз/влево/вправо) и их объединения в соответствии с правилами игры
+// - Проверка окончания игры: checkGameOver(), чтобы определять, когда не осталось ходов =>
+// это включает в себя проверку наличия пустых ячеек или возможности объединения соседних плиток.
+// - Отслеживание очков: отслеживайте счет игрока и отображайте его на холсте
+
+// - Проверка максим.значения в ячейках и использования функции gameOver(),
+// чтобы отобразить выигрышный диалог, если максимальное значение достигает 2048,
+// и проигрышный диалог, если ни одна ячейка НЕ пуста, а максимальное значение ячейки не достигло 2048
+
 import Tile from './tiles.js';
 
 export default class Board {
@@ -5,6 +20,7 @@ export default class Board {
     this.size = size;
     this.tiles = [];
     this.board = this.createEmptyBoard();
+    this.score = 0;
   }
 
   createEmptyBoard() {
@@ -62,11 +78,13 @@ export default class Board {
     const moveRowOrColumn = (values) => {
       const nonZero = values.filter((value) => value !== 0);
       const newRow = [];
-
       let i = 0;
+
       while (i < nonZero.length) {
         if (i + 1 < nonZero.length && nonZero[i] === nonZero[i + 1]) {
-          newRow.push(nonZero[i] * 2);
+          const combinedValue = nonZero[i] * 2;
+          newRow.push(combinedValue);
+          this.score += combinedValue;
           moved = true;
           i += 2;
         } else {
@@ -116,6 +134,10 @@ export default class Board {
 
     this.updateTiles();
     return moved;
+  }
+
+  getScore() {
+    return this.score;
   }
 
   updateTiles() {
