@@ -1,10 +1,7 @@
 import './styles/main.css';
 import Game from './game.js';
 
-// window.onload = () => {
-//   initGame;
-// };
-
+const canvasElement = document.getElementById('canvas');
 window.onload = () => {
-  new Game();
+  new Game(canvasElement);
 };

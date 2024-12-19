@@ -1,16 +1,17 @@
-import * as GameCanvas from './gameCanvas.js';
-import * as Board from './Board.js';
-import Tile from './tiles.js';
+import GameCanvas from './gameCanvas.js';
+import Board from './board.js';
 
-let count = 0;
+// let count = 0;
 
 export default class Game {
-  constructor() {
+  constructor(canvasElement) {
     this.canvas = new GameCanvas(canvasElement);
     this.board = new Board();
+
     this.initialize();
     this.draw();
-    this.bindEvents();
+
+    this.canvas.onMove = this.handleMove.bind(this);
   }
 
   initialize() {
@@ -21,29 +22,8 @@ export default class Game {
     this.canvas.drawBoard(this.board.tiles);
   }
 
-  bindEvents() {
-    document.addEventListener('keydown', (event) => {
-      if (event.code === 'ArrowUp') {
-        this.board.move('up');
-      } else if (event.code === 'ArrowDown') {
-        this.board.move('down');
-      } else if (event.code === 'ArrowLeft') {
-        this.board.move('left');
-      } else if (event.code === 'ArrowRight') {
-        this.board.move('right');
-      }
-      this.draw();
-    });
-
-    document.getElementById('restartButton').addEventListener('click', () => {
-      this.initialize();
-      this.draw();
-    });
+  handleMove(direction) {
+    this.board.move(direction);
+    this.draw();
   }
 }
-
-window.onload = () => {
-  new Game();
-};
-
-// export const initGame = new Game();
