@@ -4,7 +4,7 @@ import Board from './board.js';
 export default class Game {
   constructor(canvasElement) {
     this.canvas = new GameCanvas(canvasElement);
-    this.board = new Board();
+    this.board = new Board(4, canvasElement);
 
     this.initialize();
     this.draw();

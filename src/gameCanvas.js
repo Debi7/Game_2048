@@ -1,12 +1,7 @@
-// отвечает за отображение игрового поля на холсте HTML
-// Ключевые методы:
-// drawTile(tile): рисует на холсте отдельную плитку на основе ее значения и положения
-// Clear(): очищает холст для перерисовки
-// drawBoard(board): циклически перебирает массив досок и рисует каждую плитку, если она имеет ненулевое значение
-
 import Board from './board.js';
 
 const canvasElement = document.getElementById('canvas');
+
 export default class GameCanvas {
   constructor(canvas) {
     this.canvas = canvas;
@@ -42,7 +37,6 @@ export default class GameCanvas {
   addEventListeners() {
     this.canvas.addEventListener('mousedown', this.onMouseDown.bind(this));
     this.canvas.addEventListener('mouseup', this.onMouseUp.bind(this));
-
     this.canvas.addEventListener('touchstart', this.onTouchStart.bind(this));
     this.canvas.addEventListener('touchend', this.onTouchEnd.bind(this));
   }
@@ -78,32 +72,28 @@ export default class GameCanvas {
     const absDeltaX = Math.abs(deltaX);
     const absDeltaY = Math.abs(deltaY);
 
-    const minDistance = 70;
+    const minDistance = 50;
 
     if (absDeltaX < minDistance && absDeltaY < minDistance) {
       return;
     }
 
     if (absDeltaX > absDeltaY) {
-      if (deltaX > 0) {
-        this.onMove('right');
-      } else {
-        this.onMove('left');
-      }
+      this.onMove(deltaX > 0 ? 'right' : 'left');
     } else {
-      if (deltaY > 0) {
-        this.onMove('down');
-      } else {
-        this.onMove('up');
-      }
+      this.onMove(deltaY > 0 ? 'down' : 'up');
     }
   }
 
   onMove(direction) {
     console.log(`Move: ${direction}`);
-    this.board.move(direction);
-    this.drawBoard(this.board.tiles);
-    this.updateScore(this.board.getScore());
+    const moved = this.board.move(direction);
+    if (moved) {
+      this.drawBoard(this.board.tiles);
+      this.updateScore(this.board.getScore());
+    } else {
+      console.log('No changes after move');
+    }
   }
 
   drawTile(tile) {
@@ -124,7 +114,6 @@ export default class GameCanvas {
     const tileColor = colors[tile.value] || '#cdc1b4';
     const textColor = tile.value <= 4 ? '#776e65' : '#f9f6f2';
 
-    // координаты плитки
     const x = tile.x * (this.tileSize + this.tileMargin) + this.tileMargin;
     const y = tile.y * (this.tileSize + this.tileMargin) + this.tileMargin;
 
@@ -169,7 +158,6 @@ export default class GameCanvas {
 
   drawBoard(tiles) {
     this.clear();
-
     this.ctx.fillStyle = '#dad3cb';
     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
@@ -181,7 +169,6 @@ export default class GameCanvas {
   }
 
   updateScore(score) {
-    console.log(score);
     const scoreElement = document.getElementById('score');
     if (scoreElement) {
       scoreElement.textContent = score;

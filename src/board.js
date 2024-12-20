@@ -1,56 +1,52 @@
-// управляет состоянием игры, включая позиции плиток и добавление новых плиток
-// Ключевые методы:
-// InitializeBoard(): Инициализирует доску двумя начальными плитками
-// addTile(): добавляет новую плитку (2 или 4) в случайную пустую ячейку на доске
-// getEmptyCells(): возвращает список пустых ячеек, в которые можно добавить новые плитки
-// draw(ctx): очищает холст и рисует все плитки
-// - методы движения плиток (вверх/вниз/влево/вправо) и их объединения в соответствии с правилами игры
-// - Проверка окончания игры: checkGameOver(), чтобы определять, когда не осталось ходов =>
-// это включает в себя проверку наличия пустых ячеек или возможности объединения соседних плиток.
-// - Отслеживание очков: отслеживайте счет игрока и отображайте его на холсте
-
-// - Проверка максим.значения в ячейках и использования функции gameOver(),
-// чтобы отобразить выигрышный диалог, если максимальное значение достигает 2048,
-// и проигрышный диалог, если ни одна ячейка НЕ пуста, а максимальное значение ячейки не достигло 2048
-
+import Game from './game';
 import Tile from './tiles.js';
 
 export default class Board {
-  constructor(size = 4) {
+  constructor(size = 4, canvasElement) {
     this.size = size;
     this.tiles = [];
     this.board = this.createEmptyBoard();
     this.score = 0;
+    this.gameInitialized = false;
+    this.canvasElement = canvasElement;
   }
 
   createEmptyBoard() {
-    const board = [];
-    for (let i = 0; i < this.size; i++) {
-      board.push(new Array(this.size).fill(0));
-    }
-    return board;
+    return Array.from({ length: this.size }, () => Array(this.size).fill(0));
   }
 
   initializeBoard() {
     this.tiles = [];
     this.board = this.createEmptyBoard();
+    this.score = 0;
     this.updateTiles();
 
     for (let i = 0; i < 2; i++) {
-      this.addTile();
+      this.addTileWithValue(2);
     }
+
+    this.gameInitialized = true;
   }
 
-  addTile() {
+  addTileWithValue(value) {
     const emptyCells = this.getEmptyCells();
     if (emptyCells.length === 0) return;
 
     const randomCell =
       emptyCells[Math.floor(Math.random() * emptyCells.length)];
-    const value = 2;
     this.tiles.push(new Tile(value, randomCell.x, randomCell.y));
     this.board[randomCell.y][randomCell.x] = value;
     this.updateTiles();
+  }
+
+  addTile() {
+    let value;
+    if (!this.gameInitialized) {
+      value = 2;
+    } else {
+      value = Math.random() < 0.9 ? 2 : 4;
+    }
+    this.addTileWithValue(value);
   }
 
   getEmptyCells() {
@@ -66,10 +62,24 @@ export default class Board {
   }
 
   move(direction) {
+    const initialScore = this.score;
     const moved = this.moveTiles(direction);
+
     if (moved) {
       this.addTile();
     }
+
+    setTimeout(() => {
+      if (this.checkWin()) {
+        alert('Уровень пройден');
+        new Game(this.canvasElement);
+      } else if (this.checkGameOver()) {
+        alert('Нельзя сделать ход');
+        new Game(this.canvasElement);
+      }
+    }, 0);
+
+    return this.score > initialScore;
   }
 
   moveTiles(direction) {
@@ -85,8 +95,8 @@ export default class Board {
           const combinedValue = nonZero[i] * 2;
           newRow.push(combinedValue);
           this.score += combinedValue;
-          moved = true;
           i += 2;
+          moved = true;
         } else {
           newRow.push(nonZero[i]);
           i++;
@@ -97,47 +107,66 @@ export default class Board {
         newRow.push(0);
       }
 
-      if (JSON.stringify(values) !== JSON.stringify(newRow)) {
-        moved = true;
-      }
-
       return newRow;
     };
 
-    const processDirection = (isColumn) => {
-      for (let i = 0; i < this.size; i++) {
-        const line = isColumn
-          ? [
-              this.board[0][i],
-              this.board[1][i],
-              this.board[2][i],
-              this.board[3][i],
-            ]
-          : this.board[i];
-        const newLine = moveRowOrColumn(line, !isColumn);
-        if (isColumn) {
-          for (let j = 0; j < this.size; j++) {
-            this.board[j][i] = newLine[j];
-            this.updateTiles();
-          }
-        } else {
-          this.board[i] = newLine;
-        }
-      }
-    };
+    const rotateClockwise = (matrix) =>
+      matrix[0].map((_, colIndex) =>
+        matrix.map((row) => row[colIndex]).reverse()
+      );
 
-    if (direction === 'left' || direction === 'right') {
-      processDirection(false);
-    } else {
-      processDirection(true);
+    const rotateCounterClockwise = (matrix) =>
+      matrix[0]
+        .map((_, colIndex) => matrix.map((row) => row[colIndex]))
+        .reverse();
+
+    if (direction === 'up') {
+      this.board = rotateClockwise(this.board);
+    } else if (direction === 'down') {
+      this.board = rotateCounterClockwise(this.board);
+    } else if (direction === 'right') {
+      this.board = this.board.map((row) => row.reverse());
+    }
+
+    for (let i = 0; i < this.size; i++) {
+      const newRow = moveRowOrColumn(this.board[i]);
+      if (JSON.stringify(this.board[i]) !== JSON.stringify(newRow)) {
+        moved = true;
+      }
+      this.board[i] = newRow;
+    }
+
+    if (direction === 'up') {
+      this.board = rotateCounterClockwise(this.board);
+    } else if (direction === 'down') {
+      this.board = rotateClockwise(this.board);
+    } else if (direction === 'right') {
+      this.board = this.board.map((row) => row.reverse());
     }
 
     this.updateTiles();
     return moved;
   }
 
-  getScore() {
-    return this.score;
+  checkWin() {
+    return this.board.flat().includes(2048);
+  }
+
+  checkGameOver() {
+    if (this.getEmptyCells().length > 0) return false;
+
+    for (let y = 0; y < this.size; y++) {
+      for (let x = 0; x < this.size; x++) {
+        const currentValue = this.board[y][x];
+        if (
+          (x + 1 < this.size && currentValue === this.board[y][x + 1]) ||
+          (y + 1 < this.size && currentValue === this.board[y + 1][x])
+        ) {
+          return false;
+        }
+      }
+    }
+    return true;
   }
 
   updateTiles() {
@@ -146,5 +175,9 @@ export default class Board {
         row.map((value, x) => (value !== 0 ? new Tile(value, x, y) : null))
       )
       .filter((tile) => tile !== null);
+  }
+
+  getScore() {
+    return this.score;
   }
 }
