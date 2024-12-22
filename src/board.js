@@ -1,4 +1,3 @@
-import Game from './game';
 import Tile from './tiles.js';
 
 export default class Board {
@@ -30,6 +29,7 @@ export default class Board {
 
   addTileWithValue(value) {
     const emptyCells = this.getEmptyCells();
+
     if (emptyCells.length === 0) return;
 
     const randomCell =
@@ -41,16 +41,19 @@ export default class Board {
 
   addTile() {
     let value;
+
     if (!this.gameInitialized) {
       value = 2;
     } else {
       value = Math.random() < 0.9 ? 2 : 4;
     }
+
     this.addTileWithValue(value);
   }
 
   getEmptyCells() {
     const emptyCells = [];
+
     for (let y = 0; y < this.size; y++) {
       for (let x = 0; x < this.size; x++) {
         if (this.board[y][x] === 0) {
@@ -58,28 +61,18 @@ export default class Board {
         }
       }
     }
+
     return emptyCells;
   }
 
   move(direction) {
-    const initialScore = this.score;
     const moved = this.moveTiles(direction);
 
     if (moved) {
       this.addTile();
     }
 
-    setTimeout(() => {
-      if (this.checkWin()) {
-        alert('Уровень пройден');
-        new Game(this.canvasElement);
-      } else if (this.checkGameOver()) {
-        alert('Нельзя сделать ход');
-        new Game(this.canvasElement);
-      }
-    }, 0);
-
-    return this.score > initialScore;
+    return moved;
   }
 
   moveTiles(direction) {
@@ -110,38 +103,52 @@ export default class Board {
       return newRow;
     };
 
-    const rotateClockwise = (matrix) =>
-      matrix[0].map((_, colIndex) =>
-        matrix.map((row) => row[colIndex]).reverse()
-      );
-
-    const rotateCounterClockwise = (matrix) =>
-      matrix[0]
-        .map((_, colIndex) => matrix.map((row) => row[colIndex]))
-        .reverse();
-
-    if (direction === 'up') {
-      this.board = rotateClockwise(this.board);
-    } else if (direction === 'down') {
-      this.board = rotateCounterClockwise(this.board);
-    } else if (direction === 'right') {
-      this.board = this.board.map((row) => row.reverse());
-    }
-
-    for (let i = 0; i < this.size; i++) {
-      const newRow = moveRowOrColumn(this.board[i]);
-      if (JSON.stringify(this.board[i]) !== JSON.stringify(newRow)) {
-        moved = true;
+    if (direction === 'left') {
+      for (let i = 0; i < this.size; i++) {
+        const newRow = moveRowOrColumn(this.board[i]);
+        if (JSON.stringify(this.board[i]) !== JSON.stringify(newRow)) {
+          moved = true;
+        }
+        this.board[i] = newRow;
       }
-      this.board[i] = newRow;
-    }
-
-    if (direction === 'up') {
-      this.board = rotateCounterClockwise(this.board);
-    } else if (direction === 'down') {
-      this.board = rotateClockwise(this.board);
     } else if (direction === 'right') {
-      this.board = this.board.map((row) => row.reverse());
+      for (let i = 0; i < this.size; i++) {
+        const newRow = moveRowOrColumn(this.board[i].reverse());
+        if (
+          JSON.stringify(this.board[i]) !== JSON.stringify(newRow.reverse())
+        ) {
+          moved = true;
+        }
+        this.board[i] = newRow.reverse();
+      }
+    } else if (direction === 'up') {
+      for (let x = 0; x < this.size; x++) {
+        const column = [];
+        for (let y = 0; y < this.size; y++) {
+          column.push(this.board[y][x]);
+        }
+        const newColumn = moveRowOrColumn(column);
+        for (let y = 0; y < this.size; y++) {
+          if (this.board[y][x] !== newColumn[y]) {
+            moved = true;
+          }
+          this.board[y][x] = newColumn[y];
+        }
+      }
+    } else if (direction === 'down') {
+      for (let x = 0; x < this.size; x++) {
+        const column = [];
+        for (let y = 0; y < this.size; y++) {
+          column.push(this.board[y][x]);
+        }
+        const newColumn = moveRowOrColumn(column.reverse());
+        for (let y = 0; y < this.size; y++) {
+          if (this.board[y][x] !== newColumn.reverse()[y]) {
+            moved = true;
+          }
+          this.board[y][x] = newColumn.reverse()[y];
+        }
+      }
     }
 
     this.updateTiles();

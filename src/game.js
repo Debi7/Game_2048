@@ -3,8 +3,9 @@ import Board from './board.js';
 
 export default class Game {
   constructor(canvasElement) {
+    this.board = new Board(4);
     this.canvas = new GameCanvas(canvasElement);
-    this.board = new Board(4, canvasElement);
+    this.canvas.board = this.board;
 
     this.initialize();
     this.draw();
@@ -21,7 +22,19 @@ export default class Game {
   }
 
   handleMove(direction) {
-    this.board.move(direction);
-    this.draw();
+    const moved = this.board.move(direction);
+
+    if (moved) {
+      this.draw();
+      this.canvas.updateScore(this.board.getScore());
+    }
+
+    if (this.board.checkWin()) {
+      this.canvas.resetGame();
+      alert('Уровень пройден');
+    } else if (this.board.checkGameOver()) {
+      this.canvas.resetGame();
+      alert('Нельзя сделать ход');
+    }
   }
 }

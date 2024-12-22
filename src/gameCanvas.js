@@ -6,6 +6,9 @@ export default class GameCanvas {
   constructor(canvas) {
     this.canvas = canvas;
     this.ctx = this.canvas.getContext('2d');
+    this.board = new Board();
+
+    this.isMoving = false;
 
     this.tileMargin = 10;
     this.canvas.width = 450;
@@ -20,8 +23,6 @@ export default class GameCanvas {
       this.tileSize * this.boardSize + (this.boardSize + 1) * this.tileMargin;
     this.canvas.height =
       this.tileSize * this.boardSize + (this.boardSize + 1) * this.tileMargin;
-
-    this.board = new Board();
 
     this.startX = 0;
     this.startY = 0;
@@ -86,13 +87,20 @@ export default class GameCanvas {
   }
 
   onMove(direction) {
-    console.log(`Move: ${direction}`);
+    if (this.isMoving) return;
+
+    this.isMoving = true;
     const moved = this.board.move(direction);
+
     if (moved) {
       this.drawBoard(this.board.tiles);
       this.updateScore(this.board.getScore());
+
+      setTimeout(() => {
+        this.isMoving = false;
+      }, 100);
     } else {
-      console.log('No changes after move');
+      this.isMoving = false;
     }
   }
 
@@ -170,9 +178,16 @@ export default class GameCanvas {
 
   updateScore(score) {
     const scoreElement = document.getElementById('score');
+
     if (scoreElement) {
       scoreElement.textContent = score;
     }
+  }
+
+  resetGame() {
+    this.board.initializeBoard();
+    this.drawBoard(this.board.tiles);
+    this.updateScore(0);
   }
 }
 
